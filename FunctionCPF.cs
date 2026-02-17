@@ -35,7 +35,7 @@ public class FunctionCPF
             logger.LogInformation("C# HTTP trigger function processed a request.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            
+
             if (string.IsNullOrWhiteSpace(requestBody))
             {
                 return new BadRequestObjectResult(new { Message = "Corpo da requisição está vazio" });
@@ -47,22 +47,22 @@ public class FunctionCPF
 
             if (string.IsNullOrEmpty(cpf))
             {
-                return new BadRequestObjectResult(new { Message = "CPF não fornecido no corpo da requisição" });
+                return new BadRequestObjectResult(new ResponseHttp { Message = "CPF não fornecido no corpo da requisição" });
             }
 
             bool isValid = ValidadorCPF.IsValid(cpf);
 
-            return new OkObjectResult(new { CPF = cpf, IsValid = isValid });
+            return new OkObjectResult(new ResponseHttp { IsValid = isValid });
         }
         catch (JsonException)
         {
             logger.LogError("Erro ao fazer parsing do JSON");
-            return new BadRequestObjectResult(new { Message = "Corpo da requisição inválido - JSON mal formatado" });
+            return new BadRequestObjectResult(new ResponseHttp { Message = "Corpo da requisição inválido - JSON mal formatado" });
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "An error occurred while processing the request.");
-            return new ObjectResult(new ResponseHttp { IsValid = false, Message = "An error occurred while processing the request." }) { StatusCode = StatusCodes.Status500InternalServerError };
+            return new ObjectResult(new ResponseHttp { Message = "An error occurred while processing the request." }) { StatusCode = StatusCodes.Status500InternalServerError };
         }
     }
 
