@@ -1,0 +1,49 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy dotnet core project to Azure Function App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '8.0' # set this to the dotnet version to use
+  APP_NAME: 'devbitappeastus001'
+  PROJECT_APP: 'DIO-Func-ValidadorCPF'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v3
+
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish
+        run: dotnet publish ${{ env.PROJECT_APP }}.csproj -c Release -o publish
+      
+      - name: Zip publish folder CONTENT (não a pasta)
+        run: |
+          cd publish
+          zip -r ../function.zip .
+          
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: ${{ env.APP_NAME }}
+          slot-name: 'Production'
+          package: function.zip
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          sku: flexconsumption
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
